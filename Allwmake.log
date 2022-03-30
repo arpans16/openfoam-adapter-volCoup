@@ -1,0 +1,15 @@
+Building the OpenFOAM-preCICE adapter...
+
+Current OpenFOAM environment:
+  WM_PROJECT = OpenFOAM
+  WM_PROJECT_VERSION = v1912
+
+The adapter will be built into /home/2as/OpenFOAM/2as-v1912/platforms/linux64GccDPInt32Opt/lib
+Additional preprocessor/compiler options: 
+
+If not already known by the system, preCICE may be located using:
+  pkg-config --cflags libprecice  = -I/home/2as/spack/opt/spack/linux-rhel7-skylake_avx512/gcc-8.3.0/precice-2.2.0-bli3gia3w3ac4cexsyijzivtgfwjotgi/include 
+  pkg-config --libs libprecice    = -L/home/2as/spack/opt/spack/linux-rhel7-skylake_avx512/gcc-8.3.0/precice-2.2.0-bli3gia3w3ac4cexsyijzivtgfwjotgi/lib64 -lprecice 
+
+Building with WMake (see the wmake.log log file)...\n
+=== OK: Building completed successfully! ===

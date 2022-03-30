@@ -1,0 +1,97 @@
+#!/bin/sh
+set -e -u
+
+########## CONFIGURATION - You may want to change these ########################
+
+# Optional: Preprocessor flags ("-DADAPTER_DEBUG_MODE" enables debug messages)
+ADAPTER_PREP_FLAGS=""
+
+# Build command and options
+# In order to compile with multiple threads, add e.g. "-j 4".
+# Make sure that these options are supported by your OpenFOAM version.
+adapter_build_command(){
+    wmake -j 4 libso
+}
+
+# Where should the adapter be built? Default: "${FOAM_USER_LIBBIN}"
+ADAPTER_TARGET_DIR="${FOAM_USER_LIBBIN:-}"
+
+# More information for compatibility with OpenFOAM
+DOC_COMPATIBILITY="https://www.precice.org/adapter-openfoam-support.html"
+
+################################################################################
+# Funtion to print to screen and copy to a logfile
+log() {
+    echo "$@" | tee -a "Allwmake.log"
+}
+################################################################################
+
+# Information header
+log "Building the OpenFOAM-preCICE adapter..."
+
+# Export the environment variables
+export ADAPTER_PREP_FLAGS
+export ADAPTER_TARGET_DIR
+ADAPTER_PKG_CONFIG_CFLAGS="$(pkg-config --silence-errors --cflags libprecice)"
+export ADAPTER_PKG_CONFIG_CFLAGS
+ADAPTER_PKG_CONFIG_LIBS="$(pkg-config --silence-errors --libs libprecice)"
+export ADAPTER_PKG_CONFIG_LIBS
+
+# Check if an OpenFOAM environment is available
+log ""
+log "Current OpenFOAM environment:"
+log "  WM_PROJECT = ${WM_PROJECT:-}"
+log "  WM_PROJECT_VERSION = ${WM_PROJECT_VERSION:-}"
+
+if [ -z "${WM_PROJECT:-}" ]; then
+    log ""
+    log "=== ERROR: It looks like no OpenFOAM environment is available. ==="
+    log "Possible reasons:"
+    log "- Have you loaded the OpenFOAM etc/bashrc file?"
+    log "- Are you using a compatible OpenFOAM version?"
+    log "  See ${DOC_COMPATIBILITY}"
+    exit 1
+fi
+# Check if this is a compatible OpenFOAM environment
+# For now, only check if it is not foam-extend, the main incompatible variant.
+if [ "${WM_PROJECT:-}" = "foam" ]; then
+    log ""
+    log "=== ERROR: foam-extend is not compatible with the adapter."
+    log "Make sure you are using a compatible OpenFOAM version:"
+    log "  ${DOC_COMPATIBILITY}"
+    exit 1
+fi
+
+log ""
+log "The adapter will be built into ${ADAPTER_TARGET_DIR}"
+log "Additional preprocessor/compiler options: ${ADAPTER_PREP_FLAGS}"
+
+log ""
+log "If not already known by the system, preCICE may be located using:"
+log "  pkg-config --cflags libprecice  = ${ADAPTER_PKG_CONFIG_CFLAGS}"
+log "  pkg-config --libs libprecice    = ${ADAPTER_PKG_CONFIG_LIBS}"
+
+# Run wmake (build the adapter) and check the exit code
+log ""
+log "Building with WMake (see the wmake.log log file)...\n"
+if ! adapter_build_command 2>&1 | tee wmake.log ||
+    [ "$(grep -c -E "error:" wmake.log)" -ne 0 ]; then
+    log "=== ERROR: Building failed. See wmake.log for more. ==="
+    log "Possible causes:"
+    log "- Make sure you are using a compatible version of the adapter for your OpenFOAM version:"
+    log "  ${DOC_COMPATIBILITY}"
+    log "- Is preCICE discoverable at compile time? Check the content of ADAPTER_PKG_CONFIG_CFLAGS above."
+    exit 1
+else
+    ADAPTER_WMAKE_UNDEFINED_SYMBOLS=$(grep -c -E "undefined|not defined" wmake.log) || echo "Everything looks fine in wmake.log."
+    ldd -r "${ADAPTER_TARGET_DIR}/libpreciceAdapterFunctionObject.so" >ldd.log 2>&1
+    ADAPTER_LD_UNDEFINED_SYMBOLS=$(grep -c -E "undefined|not defined" ldd.log) || echo "Everything looks fine in ldd.log."
+    if [ "${ADAPTER_WMAKE_UNDEFINED_SYMBOLS}" -gt 0 ] || [ "${ADAPTER_LD_UNDEFINED_SYMBOLS}" -gt 0 ]; then
+        log "=== ERROR: Building completed with linking problems: there were undefined symbols. ==="
+        log "Possible causes:"
+        log "- Is preCICE discoverable at runtime? Check the content of ADAPTER_PKG_CONFIG_LIBS above."
+        log "See wmake.log and ldd.log for more details."
+    else
+        log "=== OK: Building completed successfully! ==="
+    fi
+fi

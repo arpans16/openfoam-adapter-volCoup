@@ -1,0 +1,49 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      preciceDict;
+}
+
+preciceConfig "../precice-config.xml";
+
+participant flowSolve;
+
+modules (AITS);
+
+interfaces
+{
+  Interface1
+  {
+    mesh              	flowSolve-Mesh-vol;
+    locations		volume;
+    patches		(inlet outlet top slip-bottom bottom interface defaultFaces);
+
+    readData
+    (
+    );
+    
+    writeData
+    (
+      	PredVel
+	Dpdt
+    );
+  };
+  Interface2
+  {
+    mesh                flowSolve-Mesh-volSurf;
+    locations           volSurf;
+    patches		(inlet outlet top slip-bottom bottom interface defaultFaces);
+
+    readData
+    (
+    );
+
+    writeData
+    (
+	Flux
+    );
+  };
+};

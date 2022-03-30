@@ -1,0 +1,26 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    		    		# Run from this directory
+
+parallel=0
+if [ "$1" == "-parallel" ]; then
+    parallel=1
+    echo "Running in parallel"
+fi
+
+echo "Entering flowSolve..."
+cd ./flowSolve/
+if [ $parallel -eq 1 ]; then
+    ./run.sh -parallel 1>logRun 2>errRun &
+else
+    ./run.sh 1>logRun 2>errRun &
+fi
+
+echo "Entering energySolve..."
+cd ../energySolve/
+if [ $parallel -eq 1 ]; then
+    ./run.sh -parallel 1>logRun 2>errRun &
+else
+    ./run.sh 1>logRun 2>errRun &
+fi
+
+cd ../

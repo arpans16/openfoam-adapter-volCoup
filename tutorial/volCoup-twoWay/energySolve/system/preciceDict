@@ -1,0 +1,50 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      preciceDict;
+}
+
+preciceConfig "../precice-config.xml";
+
+participant energySolve;
+
+modules (AITS);
+
+interfaces
+{
+  Interface1
+  {
+    mesh              	energySolve-Mesh;
+    locations		volume;
+    patches             (inlet outlet top slip-bottom bottom interface defaultFaces);
+
+    readData
+    (
+	Velocity
+    );
+    
+    writeData
+    (
+	Temperature
+	Rho
+    );
+  };
+  Interface2
+  {
+    mesh                energySolve-Mesh-volSurf;
+    locations           volSurf;
+    patches             (inlet outlet top slip-bottom bottom interface defaultFaces);
+
+    readData
+    (
+        Flux
+    );
+
+    writeData
+    (
+    );
+  };
+};
