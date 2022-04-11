@@ -8,12 +8,12 @@
   </log>
 
   <solver-interface dimensions="3">
-    <data:vector name="PredVel" />
+    <data:vector name="Velocity" />
     <data:scalar name="Dpdt" />
     <data:scalar name="Flux" />
 
     <mesh name="flowSolve-Mesh-vol">
-      <use-data name="PredVel" />
+      <use-data name="Velocity" />
       <use-data name="Dpdt" />
     </mesh>
     <mesh name="flowSolve-Mesh-volSurf">
@@ -21,7 +21,7 @@
     </mesh>
 
     <mesh name="energySolve-Mesh-vol">
-      <use-data name="PredVel" />
+      <use-data name="Velocity" />
       <use-data name="Dpdt" />
     </mesh>
     <mesh name="energySolve-Mesh-volSurf">
@@ -30,7 +30,7 @@
 
     <participant name="flowSolve">
       <use-mesh name="flowSolve-Mesh-vol" provide="yes" />
-      <write-data name="PredVel" mesh="flowSolve-Mesh-vol" />
+      <write-data name="Velocity" mesh="flowSolve-Mesh-vol" />
       <write-data name="Dpdt" mesh="flowSolve-Mesh-vol" />
       <use-mesh name="flowSolve-Mesh-volSurf" provide="yes" />
       <write-data name="Flux" mesh="flowSolve-Mesh-volSurf" />
@@ -39,7 +39,7 @@
     <participant name="energySolve">
       <use-mesh name="flowSolve-Mesh-vol" from="flowSolve" />
       <use-mesh name="energySolve-Mesh-vol" provide="yes" />
-      <read-data name="PredVel" mesh="energySolve-Mesh-vol" />
+      <read-data name="Velocity" mesh="energySolve-Mesh-vol" />
       <read-data name="Dpdt" mesh="energySolve-Mesh-vol" />
       <use-mesh name="flowSolve-Mesh-volSurf" from="flowSolve" />
       <use-mesh name="energySolve-Mesh-volSurf" provide="yes" />
@@ -62,7 +62,7 @@
       <time-window-size value="0.01" />
       <max-time value="10" />
       <participants first="flowSolve" second="energySolve" />
-      <exchange data="PredVel" mesh="flowSolve-Mesh-vol" from="flowSolve" to="energySolve" />
+      <exchange data="Velocity" mesh="flowSolve-Mesh-vol" from="flowSolve" to="energySolve" />
       <exchange data="Dpdt" mesh="flowSolve-Mesh-vol" from="flowSolve" to="energySolve" />
       <exchange data="Flux" mesh="flowSolve-Mesh-volSurf" from="flowSolve" to="energySolve" />
     </coupling-scheme:serial-explicit>

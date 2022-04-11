@@ -2,7 +2,7 @@
 dimensionedScalar compressibility = fvc::domainIntegrate(psi);
 bool compressible = (compressibility.value() > SMALL);
 
-//rho = thermo.rho();
+rho = thermo.rho();
 
 // Thermodynamic density needs to be updated by psi*d(p) after the
 // pressure solution
@@ -101,7 +101,12 @@ else
 {
     //thermo.correctRho(psi*p - psip0, rhoMin, rhoMax);
     const Foam::volScalarField& deltaRho = psi*p - psip0;
-    rho += deltaRho; rho = max(rho, rhoMin); rho = min(rho, rhoMax); 
+    forAll(rho.internalField(), cellI)
+    {
+	rho[cellI] += deltaRho[cellI];
+    }
+    //rho += deltaRho;
+    rho = max(rho, rhoMin); rho = min(rho, rhoMax); 
 }
 
 #include "rhoEqn.H"
